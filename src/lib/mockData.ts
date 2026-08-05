@@ -1,5 +1,20 @@
 import { Beat, BeatPack } from "@/lib/types";
 
+// Generate pseudo-random waveform data seeded by string
+function generateWaveform(seed: string, length = 80): number[] {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0;
+  }
+  const data: number[] = [];
+  for (let i = 0; i < length; i++) {
+    hash = ((hash * 1103515245 + 12345) & 0x7fffffff);
+    const val = 0.2 + (hash % 1000) / 1000 * 0.8;
+    data.push(val);
+  }
+  return data;
+}
+
 // ===== Mock Beat Data =====
 export const MOCK_BEATS: Beat[] = [
   {
@@ -16,8 +31,8 @@ export const MOCK_BEATS: Beat[] = [
     key: "Cm",
     duration: 198,
     prices: { mp3: 19.99, wav: 39.99, flac: 49.99, stems: 99.99 },
-    previewUrl: "",
-    waveformData: [],
+    previewUrl: "/samples/trap-dark.mp3",
+    waveformData: generateWaveform("midnight-drip"),
     coverArtUrl: "",
     avgRating: 4.8,
     reviewCount: 124,
@@ -39,8 +54,8 @@ export const MOCK_BEATS: Beat[] = [
     key: "Eb",
     duration: 224,
     prices: { mp3: 14.99, wav: 29.99, flac: 39.99, stems: 79.99 },
-    previewUrl: "",
-    waveformData: [],
+    previewUrl: "/samples/rnb-smooth.mp3",
+    waveformData: generateWaveform("golden-hour"),
     coverArtUrl: "",
     avgRating: 4.6,
     reviewCount: 89,
@@ -62,8 +77,8 @@ export const MOCK_BEATS: Beat[] = [
     key: "F#m",
     duration: 180,
     prices: { mp3: 24.99, wav: 44.99, flac: 54.99, stems: 119.99 },
-    previewUrl: "",
-    waveformData: [],
+    previewUrl: "/samples/drill-hard.mp3",
+    waveformData: generateWaveform("neon-district"),
     coverArtUrl: "",
     avgRating: 4.9,
     reviewCount: 203,
@@ -85,8 +100,8 @@ export const MOCK_BEATS: Beat[] = [
     key: "Am",
     duration: 210,
     prices: { mp3: 9.99, wav: 24.99, flac: 34.99, stems: 69.99 },
-    previewUrl: "",
-    waveformData: [],
+    previewUrl: "/samples/lofi-chill.mp3",
+    waveformData: generateWaveform("purple-haze"),
     coverArtUrl: "",
     avgRating: 4.5,
     reviewCount: 67,
@@ -108,8 +123,8 @@ export const MOCK_BEATS: Beat[] = [
     key: "G",
     duration: 195,
     prices: { mp3: 19.99, wav: 34.99, flac: 44.99, stems: 89.99 },
-    previewUrl: "",
-    waveformData: [],
+    previewUrl: "/samples/afrobeats-groove.mp3",
+    waveformData: generateWaveform("lagos-nights"),
     coverArtUrl: "",
     avgRating: 4.7,
     reviewCount: 156,
@@ -131,8 +146,8 @@ export const MOCK_BEATS: Beat[] = [
     key: "Bb",
     duration: 216,
     prices: { mp3: 14.99, wav: 29.99, flac: 39.99, stems: 79.99 },
-    previewUrl: "",
-    waveformData: [],
+    previewUrl: "/samples/synthpop-retro.mp3",
+    waveformData: generateWaveform("electric-dreams"),
     coverArtUrl: "",
     avgRating: 4.4,
     reviewCount: 45,
@@ -154,8 +169,8 @@ export const MOCK_BEATS: Beat[] = [
     key: "Dm",
     duration: 186,
     prices: { mp3: 12.99, wav: 27.99, flac: 37.99, stems: 74.99 },
-    previewUrl: "",
-    waveformData: [],
+    previewUrl: "/samples/boombap-dusty.mp3",
+    waveformData: generateWaveform("silk-road"),
     coverArtUrl: "",
     avgRating: 4.7,
     reviewCount: 112,
@@ -177,8 +192,8 @@ export const MOCK_BEATS: Beat[] = [
     key: "Em",
     duration: 204,
     prices: { mp3: 22.99, wav: 42.99, flac: 52.99, stems: 109.99 },
-    previewUrl: "",
-    waveformData: [],
+    previewUrl: "/samples/trap-phantom.mp3",
+    waveformData: generateWaveform("phantom"),
     coverArtUrl: "",
     avgRating: 4.8,
     reviewCount: 178,
@@ -200,8 +215,8 @@ export const MOCK_BEATS: Beat[] = [
     key: "C",
     duration: 160,
     prices: { mp3: 0.00, wav: 0.00, flac: 0.00, stems: 0.00 },
-    previewUrl: "",
-    waveformData: [],
+    previewUrl: "/samples/hiphop-free.mp3",
+    waveformData: generateWaveform("genesis-free"),
     coverArtUrl: "",
     avgRating: 5.0,
     reviewCount: 342,

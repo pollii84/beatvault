@@ -1,0 +1,21 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Beat audio files — producers can write to their own folder, auth users can read
+    match /beats/{producerId}/{beatId}/{allPaths=**} {
+      allow write: if request.auth != null
+                   && request.auth.uid == producerId
+                   && request.resource.size < 500 * 1024 * 1024;
+      allow read: if request.auth != null;
+    }
+
+    // Cover art — publicly readable, auth users can write
+    match /covers/{producerId}/{beatId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.auth.uid == producerId
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+  }
+}
