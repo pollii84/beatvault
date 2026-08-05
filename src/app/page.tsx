@@ -1,69 +1,400 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React from "react";
+import Link from "next/link";
+import BeatCard from "@/components/BeatCard";
+import { MOCK_BEATS, MOCK_PACKS } from "@/lib/mockData";
+import { GENRES } from "@/lib/types";
+import {
+  ArrowRight,
+  TrendingUp,
+  Headphones,
+  Zap,
+  Shield,
+  Download,
+  Star,
+  Music,
+  Package,
+  Sparkles,
+} from "lucide-react";
+
+export default function HomePage() {
+  const featuredBeats = MOCK_BEATS.slice(0, 4);
+  const trendingBeats = MOCK_BEATS.slice(2, 6);
+  const topGenres = GENRES.slice(0, 8);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div>
+      {/* ===== Hero Section ===== */}
+      <section className="relative overflow-hidden" id="hero-section">
+        {/* Ambient background */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div
+            className="absolute w-[800px] h-[800px] rounded-full"
+            style={{
+              background: "radial-gradient(circle, rgba(139, 92, 246, 0.12), transparent 60%)",
+              top: "-300px",
+              right: "-200px",
+            }}
+          />
+          <div
+            className="absolute w-[600px] h-[600px] rounded-full"
+            style={{
+              background: "radial-gradient(circle, rgba(6, 182, 212, 0.08), transparent 60%)",
+              bottom: "-200px",
+              left: "-100px",
+            }}
+          />
+          <div
+            className="absolute w-[400px] h-[400px] rounded-full"
+            style={{
+              background: "radial-gradient(circle, rgba(236, 72, 153, 0.06), transparent 60%)",
+              top: "50%",
+              left: "40%",
+              transform: "translate(-50%, -50%)",
+            }}
+          />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-24 sm:pt-28 sm:pb-32">
+          <div className="max-w-3xl">
+            {/* Tag */}
+            <div
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium mb-6 animate-fadeIn"
+              style={{
+                background: "rgba(139, 92, 246, 0.1)",
+                border: "1px solid rgba(139, 92, 246, 0.2)",
+                color: "var(--accent-purple-light)",
+              }}
+            >
+              <Sparkles size={12} />
+              Over 10,000+ premium beats available
+            </div>
+
+            <h1
+              className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.1] mb-6 animate-fadeIn"
+              style={{ fontFamily: "var(--font-heading)", animationDelay: "100ms" }}
+            >
+              Find Your{" "}
+              <span
+                className="bg-clip-text text-transparent"
+                style={{ backgroundImage: "var(--gradient-primary)" }}
+              >
+                Perfect Beat
+              </span>
+              <br />
+              Start Creating
+            </h1>
+
+            <p
+              className="text-lg sm:text-xl max-w-xl mb-8 animate-fadeIn"
+              style={{ color: "var(--text-secondary)", animationDelay: "200ms" }}
+            >
+              Discover studio-quality beat samples from top producers. Browse WAV, MP3, FLAC, and STEMS
+              formats — mix, match, and download instantly.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-3 animate-fadeIn" style={{ animationDelay: "300ms" }}>
+              <Link href="/beats" className="btn-primary text-base px-8 py-3" id="hero-browse-cta">
+                <Headphones size={18} />
+                Browse Beats
+              </Link>
+              <Link href="/signup" className="btn-secondary text-base px-8 py-3" id="hero-sell-cta">
+                Start Selling
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+
+            {/* Stats */}
+            <div
+              className="flex items-center gap-8 mt-12 pt-8 animate-fadeIn"
+              style={{ borderTop: "1px solid var(--border-subtle)", animationDelay: "400ms" }}
+            >
+              {[
+                { value: "10K+", label: "Beats" },
+                { value: "2.5K+", label: "Producers" },
+                { value: "50K+", label: "Downloads" },
+                { value: "4.9★", label: "Avg Rating" },
+              ].map((stat) => (
+                <div key={stat.label}>
+                  <p className="text-xl sm:text-2xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+                    {stat.value}
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                    {stat.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== Genre Quick Nav ===== */}
+      <section className="py-12 px-6" id="genre-nav">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+              Browse by Genre
+            </h2>
+            <Link href="/beats" className="btn-ghost text-sm">
+              View All <ArrowRight size={14} />
+            </Link>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {topGenres.map((genre, i) => {
+              const colors = [
+                "rgba(139, 92, 246, 0.12)",
+                "rgba(6, 182, 212, 0.12)",
+                "rgba(236, 72, 153, 0.12)",
+                "rgba(249, 115, 22, 0.12)",
+                "rgba(16, 185, 129, 0.12)",
+                "rgba(99, 102, 241, 0.12)",
+                "rgba(251, 191, 36, 0.12)",
+                "rgba(139, 92, 246, 0.12)",
+              ];
+              return (
+                <Link
+                  key={genre}
+                  href={`/beats?genre=${encodeURIComponent(genre)}`}
+                  className="px-5 py-2.5 rounded-full text-sm font-medium transition-all hover:scale-105"
+                  style={{
+                    background: colors[i % colors.length],
+                    border: `1px solid ${colors[i % colors.length].replace("0.12", "0.25")}`,
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  {genre}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== Featured Beats ===== */}
+      <section className="py-12 px-6" id="featured-beats">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ background: "rgba(139, 92, 246, 0.15)" }}
+              >
+                <Star size={16} style={{ color: "var(--accent-purple-light)" }} />
+              </div>
+              <h2 className="text-xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+                Featured Beats
+              </h2>
+            </div>
+            <Link href="/beats" className="btn-ghost text-sm">
+              See All <ArrowRight size={14} />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {featuredBeats.map((beat, i) => (
+              <div key={beat.id} className="animate-fadeIn" style={{ animationDelay: `${i * 80}ms` }}>
+                <BeatCard beat={beat} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== Trending Now ===== */}
+      <section className="py-12 px-6" id="trending-beats">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ background: "rgba(236, 72, 153, 0.15)" }}
+              >
+                <TrendingUp size={16} style={{ color: "var(--accent-pink)" }} />
+              </div>
+              <h2 className="text-xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+                Trending Now
+              </h2>
+            </div>
+            <Link href="/beats" className="btn-ghost text-sm">
+              See All <ArrowRight size={14} />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {trendingBeats.map((beat, i) => (
+              <div key={beat.id} className="animate-fadeIn" style={{ animationDelay: `${i * 80}ms` }}>
+                <BeatCard beat={beat} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== Beat Packs Highlight ===== */}
+      <section className="py-12 px-6" id="beat-packs-section">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ background: "rgba(6, 182, 212, 0.15)" }}
+              >
+                <Package size={16} style={{ color: "var(--accent-cyan)" }} />
+              </div>
+              <h2 className="text-xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+                Beat Packs — Save More
+              </h2>
+            </div>
+            <Link href="/packs" className="btn-ghost text-sm">
+              Browse Packs <ArrowRight size={14} />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {MOCK_PACKS.map((pack, i) => (
+              <Link
+                key={pack.id}
+                href={`/packs/${pack.id}`}
+                className="glass-card p-5 animate-fadeIn"
+                style={{ animationDelay: `${i * 100}ms` }}
+                id={`pack-card-${pack.id}`}
+              >
+                <div
+                  className="w-full aspect-[2/1] rounded-lg mb-4"
+                  style={{ background: i === 0 ? "var(--gradient-cool)" : i === 1 ? "var(--gradient-warm)" : "var(--gradient-primary)" }}
+                />
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="font-semibold text-sm">{pack.title}</h3>
+                  <span className="badge badge-new text-[10px]">-{pack.discountPercent}%</span>
+                </div>
+                <p className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
+                  {pack.description}
+                </p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-bold" style={{ color: pack.price === 0 ? "var(--accent-cyan)" : "var(--accent-green)" }}>
+                      {pack.price === 0 ? "100% FREE" : `$${pack.price.toFixed(2)}`}
+                    </span>
+                    <span className="text-xs line-through" style={{ color: "var(--text-muted)" }}>
+                      ${pack.originalPrice.toFixed(2)}
+                    </span>
+                  </div>
+                  <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                    {pack.beatIds.length} beats
+                  </span>
+                </div>
+                {pack.allowMixMatch && (
+                  <div
+                    className="flex items-center gap-1.5 mt-3 text-[11px] font-medium"
+                    style={{ color: "var(--accent-cyan)" }}
+                  >
+                    <Music size={12} />
+                    Mix & Match Available
+                  </div>
+                )}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== Why BeatVault ===== */}
+      <section className="py-16 px-6" id="why-beatvault">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3" style={{ fontFamily: "var(--font-heading)" }}>
+              Why Producers & Artists Choose{" "}
+              <span className="bg-clip-text text-transparent" style={{ backgroundImage: "var(--gradient-primary)" }}>
+                BeatVault
+              </span>
+            </h2>
+            <p className="text-sm max-w-lg mx-auto" style={{ color: "var(--text-muted)" }}>
+              Everything you need to find, buy, and deliver professional-grade beats.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[
+              {
+                icon: <Zap size={20} />,
+                title: "Instant Delivery",
+                desc: "Download your beats immediately after purchase. No waiting.",
+                color: "var(--accent-orange)",
+                bg: "rgba(249, 115, 22, 0.1)",
+              },
+              {
+                icon: <Headphones size={20} />,
+                title: "Multiple Formats",
+                desc: "MP3, WAV, FLAC, and STEMS — choose what works for your project.",
+                color: "var(--accent-purple-light)",
+                bg: "rgba(139, 92, 246, 0.1)",
+              },
+              {
+                icon: <Shield size={20} />,
+                title: "Secure Payments",
+                desc: "Powered by Stripe with full buyer and seller protection.",
+                color: "var(--accent-green)",
+                bg: "rgba(16, 185, 129, 0.1)",
+              },
+              {
+                icon: <Download size={20} />,
+                title: "Mix & Match Packs",
+                desc: "Build custom beat packs and save with bundle discounts.",
+                color: "var(--accent-cyan)",
+                bg: "rgba(6, 182, 212, 0.1)",
+              },
+            ].map((feature) => (
+              <div key={feature.title} className="glass-card p-6 text-center">
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
+                  style={{ background: feature.bg, color: feature.color }}
+                >
+                  {feature.icon}
+                </div>
+                <h3 className="font-semibold text-sm mb-2">{feature.title}</h3>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                  {feature.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== CTA Section ===== */}
+      <section className="py-16 px-6" id="cta-section">
+        <div className="max-w-4xl mx-auto">
+          <div
+            className="relative rounded-2xl p-10 sm:p-14 text-center overflow-hidden"
+            style={{ background: "var(--gradient-surface)", border: "1px solid var(--border-default)" }}
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+            {/* Glow */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: "var(--gradient-glow)" }}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <div className="relative z-10">
+              <h2
+                className="text-2xl sm:text-3xl font-bold mb-4"
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                Ready to find your next hit?
+              </h2>
+              <p className="text-sm mb-8 max-w-md mx-auto" style={{ color: "var(--text-secondary)" }}>
+                Join thousands of artists and producers on BeatVault. Start browsing or upload your beats today.
+              </p>
+              <div className="flex flex-wrap justify-center gap-3">
+                <Link href="/beats" className="btn-primary text-base px-8 py-3" id="cta-browse">
+                  <Headphones size={18} />
+                  Browse Beats
+                </Link>
+                <Link href="/signup" className="btn-secondary text-base px-8 py-3" id="cta-signup">
+                  Create Account
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
+      </section>
     </div>
   );
 }

@@ -1,0 +1,83 @@
+{
+  "version": "2.1.0",
+  "project": "beatvault",
+  "domains": [
+    {
+      "id": "dom-core-audio",
+      "name": "Core & Audio Engine",
+      "description": "Audio player, waveform visualization, catalog browsing, search & filters",
+      "features": [
+        "beat-catalog",
+        "audio-player",
+        "search-and-filters"
+      ]
+    },
+    {
+      "id": "dom-commerce",
+      "name": "Commerce & Licensing",
+      "description": "Shopping cart, Stripe checkout, beat packs (mix & match), instant file delivery & licenses",
+      "features": [
+        "shopping-cart",
+        "stripe-checkout",
+        "beat-packs-builder",
+        "instant-delivery"
+      ]
+    },
+    {
+      "id": "dom-identity",
+      "name": "Identity & Profiles",
+      "description": "Firebase authentication, buyer & producer profiles, dashboard",
+      "features": [
+        "firebase-auth",
+        "producer-profiles",
+        "user-dashboard"
+      ]
+    },
+    {
+      "id": "dom-engagement",
+      "name": "Engagement & Social",
+      "description": "Reviews & ratings, wishlist, notifications center",
+      "features": [
+        "wishlist",
+        "reviews-ratings",
+        "notifications"
+      ]
+    }
+  ],
+  "global": {
+    "architecture": "global/architecture.md",
+    "conventions": "global/conventions.md",
+    "agent_rules": "global/agent_rules.md",
+    "agent_rules_compressed": "global/agent_rules_compressed.md",
+    "tech_stack": "global/tech_stack.md",
+    "dictionary": "global/dictionary.md",
+    "memory": "global/memory.md",
+    "developer_profile": "global/developer_profile.md",
+    "companion_persona": "global/companion_persona.json",
+    "evolution_report": "global/evolution_report.md",
+    "handshake_registry": "mcp/handshake_registry.json"
+  },
+  "agents": [
+    {
+      "id": "ARC-VIDUS-AUHD2Y",
+      "name": "Vidus",
+      "capability": "Architect",
+      "level": 1,
+      "knowledgePath": ".aevum/global/personas/vidus/knowledge"
+    },
+    {
+      "id": "ENG-AN-7B9F1D",
+      "name": "An",
+      "capability": "AI Tuning",
+      "level": 1,
+      "knowledgePath": ".aevum/global/personas/an/knowledge"
+    },
+    {
+      "id": "ALG-ZENITH-A1B2C3",
+      "name": "Zenith",
+      "capability": "Algorithm Design",
+      "level": 1,
+      "knowledgePath": ".aevum/global/personas/zenith/knowledge"
+    }
+  ]
+}
