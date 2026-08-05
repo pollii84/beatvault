@@ -1,173 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
-import { useParams } from "next/navigation";
+import React from "react";
 import Link from "next/link";
-import { MOCK_PACKS, MOCK_BEATS } from "@/lib/mockData";
-import { useCart } from "@/contexts/CartContext";
-import { usePlayer } from "@/contexts/PlayerContext";
-import {
-  Package,
-  Play,
-  Pause,
-  ShoppingCart,
-  Sparkles,
-  ArrowLeft,
-} from "lucide-react";
+import { Package, ArrowLeft } from "lucide-react";
 
 export default function PackDetailClient() {
-  const params = useParams();
-  const packId = params.packId as string;
-  const pack = MOCK_PACKS.find((p) => p.id === packId) || MOCK_PACKS[0];
-
-  const { currentBeat, isPlaying, togglePlay } = usePlayer();
-  const { addItem, isInCart } = useCart();
-  const [selectedBeatIds, setSelectedBeatIds] = useState<string[]>(pack.beatIds);
-
-  const selectedBeats = selectedBeatIds
-    .map((id) => MOCK_BEATS.find((b) => b.id === id))
-    .filter(Boolean);
-
-  const availableBeats = MOCK_BEATS.filter(
-    (b) => b.producerId === pack.producerId || pack.allowMixMatch
-  );
-
-  const handleSwapBeat = (oldBeatId: string, newBeatId: string) => {
-    setSelectedBeatIds((prev) =>
-      prev.map((id) => (id === oldBeatId ? newBeatId : id))
-    );
-  };
-
-  const addPackToCart = () => {
-    selectedBeats.forEach((beat) => {
-      if (beat && !isInCart(beat.id, "mp3")) {
-        addItem(beat, "mp3");
-      }
-    });
-  };
-
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8">
-      <Link href="/packs" className="btn-ghost text-sm mb-6 inline-flex">
-        <ArrowLeft size={14} /> Back to Packs
+    <div className="max-w-4xl mx-auto px-6 py-20 text-center">
+      <Package size={56} className="mx-auto mb-5" style={{ color: "var(--text-muted)" }} />
+      <h1 className="text-2xl font-bold mb-2" style={{ fontFamily: "var(--font-heading)" }}>
+        Pack not found
+      </h1>
+      <p className="text-sm mb-6" style={{ color: "var(--text-muted)" }}>
+        This beat pack doesn&apos;t exist or has been removed.
+      </p>
+      <Link href="/packs" className="btn-primary">
+        <ArrowLeft size={16} /> Back to Packs
       </Link>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          <div
-            className="relative rounded-2xl p-8 overflow-hidden flex flex-col justify-end min-h-[220px]"
-            style={{ background: "var(--gradient-cool)" }}
-          >
-            <div className="relative z-10">
-              <span className="badge badge-new mb-3">-{pack.discountPercent}% OFF</span>
-              <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: "var(--font-heading)" }}>
-                {pack.title}
-              </h1>
-              <p className="text-sm text-white/80">by {pack.producerName}</p>
-            </div>
-          </div>
-
-          <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-            {pack.description}
-          </p>
-
-          {pack.allowMixMatch && (
-            <div className="flex items-center gap-2 p-3.5 rounded-xl" style={{ background: "rgba(6, 182, 212, 0.1)", border: "1px solid rgba(6, 182, 212, 0.2)" }}>
-              <Sparkles size={16} style={{ color: "var(--accent-cyan)" }} />
-              <p className="text-xs font-medium" style={{ color: "var(--accent-cyan)" }}>
-                Mix & Match Enabled: Swap beats in this pack!
-              </p>
-            </div>
-          )}
-
-          <div>
-            <h2 className="text-lg font-bold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
-              Included Beats ({selectedBeats.length})
-            </h2>
-
-            <div className="space-y-3">
-              {selectedBeats.map((beat) => {
-                if (!beat) return null;
-                const isCurrentlyPlaying = currentBeat?.id === beat.id && isPlaying;
-
-                return (
-                  <div
-                    key={beat.id}
-                    className="flex items-center justify-between p-4 rounded-xl"
-                    style={{ background: "var(--bg-secondary)", border: "1px solid var(--border-subtle)" }}
-                  >
-                    <div className="flex items-center gap-4 min-w-0">
-                      <button
-                        onClick={() => togglePlay(beat)}
-                        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 cursor-pointer"
-                        style={{ background: "var(--gradient-primary)" }}
-                      >
-                        {isCurrentlyPlaying ? <Pause size={16} className="text-white" /> : <Play size={16} className="text-white ml-0.5" />}
-                      </button>
-                      <div className="min-w-0">
-                        <Link href={`/beats/${beat.id}`} className="font-semibold text-sm hover:text-purple-400 truncate block">
-                          {beat.title}
-                        </Link>
-                        <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                          {beat.bpm} BPM • {beat.key}
-                        </p>
-                      </div>
-                    </div>
-
-                    {pack.allowMixMatch && (
-                      <select
-                        className="input-field text-xs py-1.5 px-2.5 w-auto"
-                        value={beat.id}
-                        onChange={(e) => handleSwapBeat(beat.id, e.target.value)}
-                      >
-                        <option value={beat.id}>Current: {beat.title}</option>
-                        {availableBeats
-                          .filter((b) => !selectedBeatIds.includes(b.id))
-                          .map((b) => (
-                            <option key={b.id} value={b.id}>
-                              Swap to: {b.title}
-                            </option>
-                          ))}
-                      </select>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <div className="rounded-xl p-6 sticky top-24" style={{ background: "var(--bg-secondary)", border: "1px solid var(--border-default)", boxShadow: "var(--shadow-md)" }}>
-            <h3 className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--text-muted)" }}>
-              Bundle Summary
-            </h3>
-
-            <div className="space-y-3 mb-6">
-              <div className="flex justify-between text-sm">
-                <span style={{ color: "var(--text-secondary)" }}>Individual Total</span>
-                <span className="line-through" style={{ color: "var(--text-muted)" }}>${pack.originalPrice.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between py-3" style={{ borderTop: "1px solid var(--border-subtle)" }}>
-                <span className="font-semibold">Pack Price</span>
-                <span className="text-xl font-bold" style={{ color: pack.price === 0 ? "var(--accent-cyan)" : "var(--accent-green)", fontFamily: "var(--font-heading)" }}>
-                  {pack.price === 0 ? "100% FREE" : `$${pack.price.toFixed(2)}`}
-                </span>
-              </div>
-            </div>
-
-            {pack.price === 0 ? (
-              <Link href="/orders/starter-kit-free" className="btn-primary w-full justify-center py-3 mb-3 bg-gradient-to-r from-cyan-500 to-purple-600">
-                <Sparkles size={16} /> Claim & Download Free Pack
-              </Link>
-            ) : (
-              <button onClick={addPackToCart} className="btn-primary w-full justify-center py-3 mb-3">
-                <ShoppingCart size={16} /> Add Pack Beats to Cart
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

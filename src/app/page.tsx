@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import BeatCard from "@/components/BeatCard";
-import { MOCK_BEATS, MOCK_PACKS } from "@/lib/mockData";
+import { MOCK_BEATS } from "@/lib/mockData";
 import { GENRES } from "@/lib/types";
 import {
   ArrowRight,
@@ -249,50 +249,12 @@ export default function HomePage() {
               Browse Packs <ArrowRight size={14} />
             </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {MOCK_PACKS.map((pack, i) => (
-              <Link
-                key={pack.id}
-                href={`/packs/${pack.id}`}
-                className="glass-card p-5 animate-fadeIn"
-                style={{ animationDelay: `${i * 100}ms` }}
-                id={`pack-card-${pack.id}`}
-              >
-                <div
-                  className="w-full aspect-[2/1] rounded-lg mb-4"
-                  style={{ background: i === 0 ? "var(--gradient-cool)" : i === 1 ? "var(--gradient-warm)" : "var(--gradient-primary)" }}
-                />
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold text-sm">{pack.title}</h3>
-                  <span className="badge badge-new text-[10px]">-{pack.discountPercent}%</span>
-                </div>
-                <p className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
-                  {pack.description}
-                </p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold" style={{ color: pack.price === 0 ? "var(--accent-cyan)" : "var(--accent-green)" }}>
-                      {pack.price === 0 ? "100% FREE" : `$${pack.price.toFixed(2)}`}
-                    </span>
-                    <span className="text-xs line-through" style={{ color: "var(--text-muted)" }}>
-                      ${pack.originalPrice.toFixed(2)}
-                    </span>
-                  </div>
-                  <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                    {pack.beatIds.length} beats
-                  </span>
-                </div>
-                {pack.allowMixMatch && (
-                  <div
-                    className="flex items-center gap-1.5 mt-3 text-[11px] font-medium"
-                    style={{ color: "var(--accent-cyan)" }}
-                  >
-                    <Music size={12} />
-                    Mix & Match Available
-                  </div>
-                )}
-              </Link>
-            ))}
+          <div className="glass-card p-10 text-center">
+            <Package size={40} className="mx-auto mb-4" style={{ color: "var(--text-muted)" }} />
+            <h3 className="text-lg font-semibold mb-2">Packs coming soon</h3>
+            <p className="text-sm max-w-md mx-auto" style={{ color: "var(--text-muted)" }}>
+              Producers will be able to create curated beat bundles at discounted prices. Stay tuned!
+            </p>
           </div>
         </div>
       </section>

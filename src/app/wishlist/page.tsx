@@ -4,11 +4,10 @@ import React, { useState } from "react";
 import Link from "next/link";
 import BeatCard from "@/components/BeatCard";
 import { MOCK_BEATS } from "@/lib/mockData";
-import { Heart, ShoppingCart, ArrowRight } from "lucide-react";
+import { Heart, ArrowRight } from "lucide-react";
 
 export default function WishlistPage() {
-  // Mock wishlisted beats (in production, this comes from Firestore)
-  const [wishlistedIds, setWishlistedIds] = useState(["beat-1", "beat-3", "beat-5"]);
+  const [wishlistedIds, setWishlistedIds] = useState<string[]>([]);
   const wishlistedBeats = MOCK_BEATS.filter((b) => wishlistedIds.includes(b.id));
 
   const removeFromWishlist = (beatId: string) => {

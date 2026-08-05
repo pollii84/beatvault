@@ -1,11 +1,7 @@
 import ProfileClient from "./ProfileClient";
 
 export function generateStaticParams() {
-  return [
-    { userId: "prod-1" },
-    { userId: "prod-2" },
-    { userId: "prod-3" },
-  ];
+  return [{ userId: "placeholder" }];
 }
 
 export default function ProfilePage() {

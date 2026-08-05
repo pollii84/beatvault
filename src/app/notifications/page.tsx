@@ -5,57 +5,16 @@ import Link from "next/link";
 import { Notification } from "@/lib/types";
 import {
   Bell,
-  CheckCircle2,
   DollarSign,
   Star,
   Music,
   Info,
   CheckCheck,
+  ArrowRight,
 } from "lucide-react";
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: "notif-1",
-      userId: "user-1",
-      type: "sale",
-      title: "New Sale!",
-      message: "You sold WAV License for 'Midnight Drip' to @VocalVibes.",
-      isRead: false,
-      createdAt: new Date("2026-08-04T10:30:00"),
-    },
-    {
-      id: "notif-2",
-      userId: "user-1",
-      type: "review",
-      title: "New 5-Star Review",
-      message: "BeatCrafter left a 5-star review on 'Midnight Drip'.",
-      isRead: false,
-      createdAt: new Date("2026-08-03T15:45:00"),
-    },
-    {
-      id: "notif-3",
-      userId: "user-1",
-      type: "release",
-      title: "New Release from BASSQUAKE",
-      message: "BASSQUAKE just uploaded 'Phantom' (Drill/Trap).",
-      isRead: true,
-      createdAt: new Date("2026-08-02T09:12:00"),
-    },
-    {
-      id: "notif-4",
-      userId: "user-1",
-      type: "system",
-      title: "Payout Completed",
-      message: "Your monthly earnings of $1,240.00 were transferred to Stripe.",
-      isRead: true,
-      createdAt: new Date("2026-08-01T12:00:00"),
-    },
-  ]);
-
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-  };
+  const [notifications] = useState<Notification[]>([]);
 
   const getIcon = (type: Notification["type"]) => {
     switch (type) {
@@ -69,6 +28,23 @@ export default function NotificationsPage() {
         return <Info size={18} className="text-cyan-400" />;
     }
   };
+
+  if (notifications.length === 0) {
+    return (
+      <div className="max-w-4xl mx-auto px-6 py-20 text-center">
+        <Bell size={48} className="mx-auto mb-4" style={{ color: "var(--text-muted)" }} />
+        <h1 className="text-2xl font-bold mb-2" style={{ fontFamily: "var(--font-heading)" }}>
+          No notifications yet
+        </h1>
+        <p className="text-sm mb-6" style={{ color: "var(--text-muted)" }}>
+          When you receive sales, reviews, or new releases, they&apos;ll show up here.
+        </p>
+        <Link href="/beats" className="btn-primary">
+          Browse Beats <ArrowRight size={16} />
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">
@@ -87,7 +63,7 @@ export default function NotificationsPage() {
           </div>
         </div>
 
-        <button onClick={markAllAsRead} className="btn-ghost text-xs">
+        <button className="btn-ghost text-xs">
           <CheckCheck size={14} /> Mark all as read
         </button>
       </div>

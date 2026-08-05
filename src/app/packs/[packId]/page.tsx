@@ -1,10 +1,7 @@
 import PackDetailClient from "./PackDetailClient";
-import { MOCK_PACKS } from "@/lib/mockData";
 
 export function generateStaticParams() {
-  return MOCK_PACKS.map((pack) => ({
-    packId: pack.id,
-  }));
+  return [{ packId: "placeholder" }];
 }
 
 export default function PackDetailPage() {
