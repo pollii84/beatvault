@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "getbeatvault-app"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }

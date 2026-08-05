@@ -20,6 +20,16 @@ export const metadata: Metadata = {
   description:
     "Discover, preview, and purchase studio-quality beat samples across every genre. Browse WAV, MP3, FLAC, and STEMS formats from top producers.",
   keywords: ["beats", "samples", "music production", "hip hop", "trap", "R&B", "stems", "marketplace"],
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
+  openGraph: {
+    title: "BeatVault — Premium Beat Samples Marketplace",
+    description: "Discover, preview, and purchase studio-quality beat samples across every genre.",
+    siteName: "BeatVault",
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
