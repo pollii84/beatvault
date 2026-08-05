@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import BeatCard from "@/components/BeatCard";
 import { MOCK_BEATS } from "@/lib/mockData";
-import { GENRES, FORMATS, MUSICAL_KEYS } from "@/lib/types";
+import { getActiveBeats } from "@/lib/firestore";
+import { Beat, GENRES, FORMATS, MUSICAL_KEYS } from "@/lib/types";
 import {
   Search,
   SlidersHorizontal,
@@ -14,6 +15,8 @@ import {
 } from "lucide-react";
 
 export default function BeatsPage() {
+  const [dbBeats, setDbBeats] = useState<Beat[]>([]);
+  const [loadingDb, setLoadingDb] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
@@ -23,6 +26,32 @@ export default function BeatsPage() {
   const [sortBy, setSortBy] = useState("newest");
   const [showFilters, setShowFilters] = useState(true);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  useEffect(() => {
+    async function loadDbBeats() {
+      try {
+        const fetched = await getActiveBeats(100);
+        setDbBeats(fetched);
+      } catch (err) {
+        console.error("Failed to load beats from Firestore:", err);
+      } finally {
+        setLoadingDb(false);
+      }
+    }
+    loadDbBeats();
+  }, []);
+
+  // Merge uploaded beats from Firestore with demo fallback beats
+  const allBeats = useMemo(() => {
+    const combined = [...dbBeats];
+    MOCK_BEATS.forEach((mb) => {
+      if (!combined.some((b) => b.id === mb.id)) {
+        combined.push(mb);
+      }
+    });
+    return combined;
+  }, [dbBeats]);
+
 
   const toggleGenre = (genre: string) => {
     setSelectedGenres((prev) =>
@@ -53,7 +82,7 @@ export default function BeatsPage() {
     (priceRange[0] !== 0 || priceRange[1] !== 150 ? 1 : 0);
 
   const filteredBeats = useMemo(() => {
-    let beats = [...MOCK_BEATS];
+    let beats = [...allBeats];
 
     // Search
     if (searchQuery) {
@@ -127,7 +156,7 @@ export default function BeatsPage() {
           Browse Beats
         </h1>
         <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-          Discover {MOCK_BEATS.length} premium beats from top producers
+          Discover {allBeats.length} premium beats from top producers
         </p>
       </div>
 

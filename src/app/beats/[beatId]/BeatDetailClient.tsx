@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { MOCK_BEATS } from "@/lib/mockData";
+import { getBeat } from "@/lib/firestore";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useCart } from "@/contexts/CartContext";
-import { BeatFormat, FORMATS } from "@/lib/types";
+import { Beat, BeatFormat, FORMATS } from "@/lib/types";
 import BeatCard from "@/components/BeatCard";
 import {
   Play,
@@ -25,14 +26,35 @@ import {
 export default function BeatDetailClient() {
   const params = useParams();
   const beatId = params.beatId as string;
-  const beat = MOCK_BEATS.find((b) => b.id === beatId) || MOCK_BEATS[0];
+  const [beat, setBeat] = useState<Beat | null>(() => {
+    return MOCK_BEATS.find((b) => b.id === beatId) || null;
+  });
+  const [loading, setLoading] = useState(!beat);
+
+  useEffect(() => {
+    async function loadBeat() {
+      try {
+        const fetched = await getBeat(beatId);
+        if (fetched) {
+          setBeat(fetched);
+        }
+      } catch (err) {
+        console.error("Failed to load beat from Firestore:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadBeat();
+  }, [beatId]);
+
+  const activeBeat = beat || MOCK_BEATS[0];
   const { currentBeat, isPlaying, togglePlay, progress } = usePlayer();
   const { addItem, isInCart } = useCart();
   const [selectedFormat, setSelectedFormat] = useState<BeatFormat>("wav");
 
-  const isCurrentlyPlaying = currentBeat?.id === beat.id && isPlaying;
+  const isCurrentlyPlaying = currentBeat?.id === activeBeat.id && isPlaying;
   const relatedBeats = MOCK_BEATS.filter(
-    (b) => b.id !== beat.id && b.genres.some((g) => beat.genres.includes(g))
+    (b) => b.id !== activeBeat.id && b.genres.some((g) => activeBeat.genres.includes(g))
   ).slice(0, 4);
 
   const formatDuration = (s: number) => {
@@ -52,7 +74,7 @@ export default function BeatDetailClient() {
       <nav className="flex items-center gap-2 text-xs mb-6" style={{ color: "var(--text-muted)" }}>
         <Link href="/beats" className="hover:text-white transition-colors">Beats</Link>
         <ChevronRight size={12} />
-        <span style={{ color: "var(--text-secondary)" }}>{beat.title}</span>
+        <span style={{ color: "var(--text-secondary)" }}>{activeBeat.title}</span>
       </nav>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -60,7 +82,7 @@ export default function BeatDetailClient() {
           <div className="relative aspect-[2/1] rounded-2xl overflow-hidden mb-6" style={{ background: "var(--gradient-cool)" }}>
             <div className="absolute inset-0 flex items-center justify-center">
               <button
-                onClick={() => togglePlay(beat)}
+                onClick={() => togglePlay(activeBeat)}
                 className="w-20 h-20 rounded-full flex items-center justify-center cursor-pointer transition-transform hover:scale-110"
                 style={{
                   background: "rgba(255,255,255,0.15)",
@@ -77,7 +99,7 @@ export default function BeatDetailClient() {
               </button>
             </div>
 
-            {currentBeat?.id === beat.id && (
+            {currentBeat?.id === activeBeat.id && (
               <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: "rgba(0,0,0,0.3)" }}>
                 <div className="h-full" style={{ width: `${progress}%`, background: "var(--gradient-primary)" }} />
               </div>
@@ -87,14 +109,14 @@ export default function BeatDetailClient() {
           <div className="flex items-start justify-between mb-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold mb-1" style={{ fontFamily: "var(--font-heading)" }}>
-                {beat.title}
+                {activeBeat.title}
               </h1>
               <Link
-                href={`/profile/${beat.producerId}`}
+                href={`/profile/${activeBeat.producerId}`}
                 className="text-sm font-medium transition-colors"
                 style={{ color: "var(--accent-purple-light)" }}
               >
-                by {beat.producerName}
+                by {activeBeat.producerName}
               </Link>
             </div>
             <div className="flex items-center gap-2">
@@ -108,33 +130,33 @@ export default function BeatDetailClient() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3 mb-6">
-            {beat.genres.map((g) => (
+            {activeBeat.genres?.map((g) => (
               <span key={g} className="badge badge-genre">{g}</span>
             ))}
             <div className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-secondary)" }}>
-              <Disc3 size={12} /> {beat.bpm} BPM
+              <Disc3 size={12} /> {activeBeat.bpm} BPM
             </div>
             <div className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-secondary)" }}>
-              <Music2 size={12} /> Key of {beat.key}
+              <Music2 size={12} /> Key of {activeBeat.key}
             </div>
             <div className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-secondary)" }}>
-              <Clock size={12} /> {formatDuration(beat.duration)}
+              <Clock size={12} /> {formatDuration(activeBeat.duration || 180)}
             </div>
             <div className="flex items-center gap-1.5 text-xs" style={{ color: "#fbbf24" }}>
-              <Star size={12} fill="#fbbf24" /> {beat.avgRating.toFixed(1)} ({beat.reviewCount} reviews)
+              <Star size={12} fill="#fbbf24" /> {(activeBeat.avgRating || 5).toFixed(1)} ({activeBeat.reviewCount || 0} reviews)
             </div>
           </div>
 
           <div className="mb-8">
             <h3 className="text-sm font-semibold mb-2">About this beat</h3>
             <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-              {beat.description}
+              {activeBeat.description}
             </p>
           </div>
 
           <div>
             <h3 className="text-lg font-semibold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
-              Reviews ({beat.reviewCount})
+              Reviews ({activeBeat.reviewCount || 0})
             </h3>
             <div className="space-y-4">
               {reviews.map((review) => (
@@ -170,8 +192,8 @@ export default function BeatDetailClient() {
             </h3>
 
             <div className="space-y-2 mb-6">
-              {FORMATS.filter((f) => beat.formats.includes(f.value) || beat.prices[f.value]).map((fmt) => {
-                const price = beat.prices[fmt.value];
+              {FORMATS.filter((f) => activeBeat.formats?.includes(f.value) || (activeBeat.prices && activeBeat.prices[f.value] !== undefined)).map((fmt) => {
+                const price = activeBeat.prices ? activeBeat.prices[fmt.value] : undefined;
                 if (price === undefined) return null;
                 const isSelected = selectedFormat === fmt.value;
                 return (
@@ -194,12 +216,12 @@ export default function BeatDetailClient() {
             </div>
 
             <button
-              onClick={() => addItem(beat, selectedFormat)}
-              disabled={isInCart(beat.id, selectedFormat)}
+              onClick={() => addItem(activeBeat, selectedFormat)}
+              disabled={isInCart(activeBeat.id, selectedFormat)}
               className="btn-primary w-full justify-center py-3 mb-3 disabled:opacity-70"
             >
-              {isInCart(beat.id, selectedFormat) ? <Check size={16} /> : <ShoppingCart size={16} />}
-              {isInCart(beat.id, selectedFormat) ? "Added to Cart" : "Add to Cart"}
+              {isInCart(activeBeat.id, selectedFormat) ? <Check size={16} /> : <ShoppingCart size={16} />}
+              {isInCart(activeBeat.id, selectedFormat) ? "Added to Cart" : "Add to Cart"}
             </button>
           </div>
         </div>
