@@ -20,6 +20,7 @@ import {
   ChevronDown,
   BookOpen,
   Sparkles,
+  Wand2,
 } from "lucide-react";
 
 export default function Navigation() {
@@ -82,6 +83,10 @@ export default function Navigation() {
           <Link href="/packs/builder" className="btn-ghost text-sm text-cyan-400 hover:text-cyan-300" id="nav-builder">
             <Sparkles size={16} />
             Pack Builder
+          </Link>
+          <Link href="/match" className="btn-ghost text-sm text-amber-400 hover:text-amber-300 font-bold" id="nav-match">
+            <Wand2 size={16} />
+            Match My Track
           </Link>
           <Link href="/learn" className="btn-ghost text-sm text-purple-400 hover:text-purple-300" id="nav-learn">
             <BookOpen size={16} />
@@ -269,6 +274,14 @@ export default function Navigation() {
           >
             <Sparkles size={18} />
             Pack Builder
+          </Link>
+          <Link
+            href="/match"
+            className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors hover:bg-white/5 text-amber-400 font-bold"
+            onClick={() => setShowMobileMenu(false)}
+          >
+            <Wand2 size={18} />
+            Match My Track (AI)
           </Link>
           <Link
             href="/learn"
