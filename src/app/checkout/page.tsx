@@ -1,50 +1,64 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
-import { ShieldCheck, CreditCard, Lock, ArrowLeft, Check } from "lucide-react";
+import { ShieldCheck, CreditCard, Lock, ArrowLeft, Check, Loader2, AlertCircle } from "lucide-react";
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { auth } from "@/lib/firebase";
 
 export default function CheckoutPage() {
   const { items, totalPrice, clearCart } = useCart();
   const [processing, setProcessing] = useState(false);
-  const [complete, setComplete] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleCheckout = async () => {
     setProcessing(true);
-    // Simulating Stripe checkout
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setProcessing(false);
-    setComplete(true);
-    clearCart();
-  };
+    setError(null);
 
-  if (complete) {
-    return (
-      <div className="max-w-lg mx-auto px-6 py-20 text-center animate-fadeIn">
-        <div
-          className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
-          style={{ background: "rgba(16, 185, 129, 0.15)" }}
-        >
-          <Check size={32} style={{ color: "var(--accent-green)" }} />
-        </div>
-        <h1 className="text-2xl font-bold mb-3" style={{ fontFamily: "var(--font-heading)" }}>
-          Payment Successful!
-        </h1>
-        <p className="text-sm mb-6" style={{ color: "var(--text-muted)" }}>
-          Your beats are ready to download. Check your email for the receipt and download links.
-        </p>
-        <div className="flex flex-col sm:flex-row justify-center gap-3">
-          <Link href="/dashboard" className="btn-primary">
-            Go to Dashboard
-          </Link>
-          <Link href="/beats" className="btn-secondary">
-            Browse More Beats
-          </Link>
-        </div>
-      </div>
-    );
-  }
+    // Check if user is authenticated
+    const user = auth.currentUser;
+    if (!user) {
+      setError("Please sign in to complete your purchase.");
+      setProcessing(false);
+      return;
+    }
+
+    try {
+      const functions = getFunctions();
+      const createCheckoutSession = httpsCallable(functions, "createCheckoutSession");
+
+      const cartItems = items.map((item) => ({
+        beatId: item.beatId,
+        format: item.format,
+      }));
+
+      const result = await createCheckoutSession({
+        items: cartItems,
+        successUrl: `${window.location.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl: `${window.location.origin}/cart`,
+      });
+
+      const { url } = result.data as { sessionId: string; url: string };
+
+      if (url) {
+        // Clear cart before redirecting (it will be fulfilled by webhook)
+        clearCart();
+        // Redirect to Stripe Checkout
+        window.location.href = url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
+    } catch (err: unknown) {
+      console.error("Checkout error:", err);
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again.";
+      setError(errorMessage);
+      setProcessing(false);
+    }
+  };
 
   if (items.length === 0) {
     return (
@@ -66,7 +80,7 @@ export default function CheckoutPage() {
       </h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        {/* Payment Form */}
+        {/* Payment Info */}
         <div className="lg:col-span-3">
           <div
             className="rounded-xl p-6"
@@ -74,53 +88,35 @@ export default function CheckoutPage() {
           >
             <div className="flex items-center gap-2 mb-5">
               <CreditCard size={18} style={{ color: "var(--accent-purple-light)" }} />
-              <h2 className="text-sm font-semibold">Payment Details</h2>
+              <h2 className="text-sm font-semibold">Secure Payment</h2>
             </div>
 
             <div className="space-y-4">
-              <div>
-                <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
-                  Email
-                </label>
-                <input
-                  type="email"
-                  placeholder="your@email.com"
-                  className="input-field"
-                  id="checkout-email"
-                />
+              {/* Stripe info box */}
+              <div
+                className="rounded-lg p-4 flex items-start gap-3"
+                style={{ background: "var(--bg-tertiary)", border: "1px solid var(--border-subtle)" }}
+              >
+                <Lock size={16} className="mt-0.5 shrink-0" style={{ color: "var(--accent-purple-light)" }} />
+                <div>
+                  <p className="text-sm font-medium mb-1">Powered by Stripe</p>
+                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                    You&apos;ll be redirected to Stripe&apos;s secure checkout to complete your payment.
+                    We never see or store your card details.
+                  </p>
+                </div>
               </div>
 
-              <div>
-                <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
-                  Card Number
-                </label>
+              {/* Error message */}
+              {error && (
                 <div
-                  className="input-field flex items-center"
-                  style={{ background: "var(--bg-tertiary)" }}
+                  className="rounded-lg p-3 flex items-start gap-2"
+                  style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)" }}
                 >
-                  <span className="text-sm" style={{ color: "var(--text-muted)" }}>
-                    Stripe payment form will render here
-                  </span>
+                  <AlertCircle size={16} className="mt-0.5 shrink-0" style={{ color: "#ef4444" }} />
+                  <p className="text-xs" style={{ color: "#ef4444" }}>{error}</p>
                 </div>
-                <p className="text-[10px] mt-1.5 flex items-center gap-1" style={{ color: "var(--text-muted)" }}>
-                  <Lock size={10} /> Secured by Stripe. We never store your card details.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
-                    Expiry
-                  </label>
-                  <input type="text" placeholder="MM / YY" className="input-field" id="checkout-expiry" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
-                    CVC
-                  </label>
-                  <input type="text" placeholder="123" className="input-field" id="checkout-cvc" />
-                </div>
-              </div>
+              )}
 
               {/* Terms */}
               <label className="flex items-start gap-2 cursor-pointer mt-2">
@@ -145,7 +141,10 @@ export default function CheckoutPage() {
               id="pay-btn"
             >
               {processing ? (
-                "Processing..."
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  Redirecting to Stripe...
+                </>
               ) : (
                 <>
                   <Lock size={14} />
@@ -171,7 +170,11 @@ export default function CheckoutPage() {
                 <div key={`${item.beatId}-${item.format}`} className="flex items-center gap-3">
                   <div
                     className="w-10 h-10 rounded-lg shrink-0"
-                    style={{ background: "var(--gradient-cool)" }}
+                    style={{
+                      background: item.beat.coverArtUrl
+                        ? `url(${item.beat.coverArtUrl}) center/cover`
+                        : "var(--gradient-cool)",
+                    }}
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium truncate">{item.beat.title}</p>
