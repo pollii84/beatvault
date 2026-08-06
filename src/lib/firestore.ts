@@ -45,6 +45,11 @@ export async function deactivateBeat(beatId: string): Promise<void> {
   await updateBeat(beatId, { isActive: false });
 }
 
+export async function deleteBeat(beatId: string): Promise<void> {
+  const beatRef = doc(db, "beats", beatId);
+  await deleteDoc(beatRef);
+}
+
 export async function getBeat(beatId: string): Promise<Beat | null> {
   const beatRef = doc(db, "beats", beatId);
   const snap = await getDoc(beatRef);
@@ -155,4 +160,23 @@ export async function getProducerStats(producerId: string) {
       : 0;
 
   return { totalBeats, activeBeats, totalSales, avgRating };
+}
+
+export async function getProducerSales(producerId: string): Promise<Order[]> {
+  const beats = await getProducerBeats(producerId);
+  const beatIds = beats.map((b) => b.id);
+  if (beatIds.length === 0) return [];
+
+  const q = query(
+    collection(db, "orders"),
+    where("status", "==", "paid"),
+    orderBy("createdAt", "desc")
+  );
+  const snap = await getDocs(q);
+
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() } as Order))
+    .filter((order) =>
+      order.items?.some((item) => beatIds.includes(item.beatId))
+    );
 }

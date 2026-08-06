@@ -3,11 +3,18 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { getProducerBeats, getProducerStats, getUserPurchases } from "@/lib/firestore";
-import { getBeatDownloadUrl } from "@/lib/storage";
+import {
+  getProducerBeats,
+  getProducerStats,
+  getUserPurchases,
+  getProducerSales,
+  updateBeat,
+  deleteBeat,
+} from "@/lib/firestore";
+import { getBeatDownloadUrl, deleteBeatFiles } from "@/lib/storage";
 import { Beat, Order, OrderItem } from "@/lib/types";
-import BeatCard from "@/components/BeatCard";
 import LicenseModal from "@/components/LicenseModal";
+import EditBeatModal from "@/components/EditBeatModal";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import {
   LayoutDashboard,
@@ -25,6 +32,11 @@ import {
   Loader2,
   FileText,
   ShieldCheck,
+  Edit,
+  Trash2,
+  Eye,
+  EyeOff,
+  ExternalLink,
 } from "lucide-react";
 
 type DashTab = "overview" | "beats" | "sales" | "purchases" | "analytics";
@@ -36,9 +48,15 @@ export default function DashboardPage() {
   // Live Firestore state
   const [myBeats, setMyBeats] = useState<Beat[]>([]);
   const [purchases, setPurchases] = useState<Order[]>([]);
+  const [sales, setSales] = useState<Order[]>([]);
   const [stats, setStats] = useState({ totalBeats: 0, activeBeats: 0, totalSales: 0, avgRating: 0 });
   const [loadingData, setLoadingData] = useState(true);
   const [downloadingFormat, setDownloadingFormat] = useState<string | null>(null);
+
+  // Producer catalog actions state
+  const [editingBeat, setEditingBeat] = useState<Beat | null>(null);
+  const [deletingBeatId, setDeletingBeatId] = useState<string | null>(null);
+  const [togglingBeatId, setTogglingBeatId] = useState<string | null>(null);
 
   // License Modal State
   const [licenseModal, setLicenseModal] = useState<{
@@ -64,6 +82,8 @@ export default function DashboardPage() {
           setMyBeats(beats);
           const pStats = await getProducerStats(user.uid);
           setStats(pStats);
+          const pSales = await getProducerSales(user.uid);
+          setSales(pSales);
         }
         if (isBuyer) {
           const userOrders = await getUserPurchases(user.uid);
@@ -78,6 +98,50 @@ export default function DashboardPage() {
     loadDashboardData();
   }, [user, isProducer, isBuyer]);
 
+  // Handle active/draft toggle
+  const handleToggleBeatActive = async (beat: Beat) => {
+    setTogglingBeatId(beat.id);
+    const newStatus = !beat.isActive;
+    try {
+      await updateBeat(beat.id, { isActive: newStatus });
+      setMyBeats((prev) =>
+        prev.map((b) => (b.id === beat.id ? { ...b, isActive: newStatus } : b))
+      );
+    } catch (err) {
+      console.error("Error toggling beat status:", err);
+      alert("Failed to update beat status.");
+    } finally {
+      setTogglingBeatId(null);
+    }
+  };
+
+  // Handle beat deletion
+  const handleDeleteBeat = async (beat: Beat) => {
+    if (
+      !confirm(
+        `Are you sure you want to delete "${beat.title}"? This will permanently delete the beat record and its audio files.`
+      )
+    ) {
+      return;
+    }
+
+    setDeletingBeatId(beat.id);
+    try {
+      await deleteBeat(beat.id);
+      await deleteBeatFiles(beat.producerId, beat.id);
+      setMyBeats((prev) => prev.filter((b) => b.id !== beat.id));
+      setStats((prev) => ({
+        ...prev,
+        totalBeats: Math.max(0, prev.totalBeats - 1),
+      }));
+    } catch (err) {
+      console.error("Error deleting beat:", err);
+      alert("Failed to delete beat. Please try again.");
+    } finally {
+      setDeletingBeatId(null);
+    }
+  };
+
   const handleDownloadFile = async (orderId: string, beatId: string, format: string, producerId?: string) => {
     const key = `${orderId}-${beatId}-${format}`;
     setDownloadingFormat(key);
@@ -85,17 +149,14 @@ export default function DashboardPage() {
     try {
       let downloadUrl: string | null = null;
 
-      // Try secure Cloud Function signed URL first
       try {
         const functions = getFunctions();
         const getSecureUrlCall = httpsCallable(functions, "getSecureDownloadUrl");
         const result = await getSecureUrlCall({ orderId, beatId, format });
-        const data = result.data as { url?: string; downloadCount?: number };
+        const data = result.data as { url?: string };
 
         if (data?.url) {
           downloadUrl = data.url;
-
-          // Optimistically update local download count
           setPurchases((prev) =>
             prev.map((o) =>
               o.id === orderId
@@ -115,7 +176,6 @@ export default function DashboardPage() {
         console.warn("Secure Cloud Function download fallback:", cfErr);
       }
 
-      // Fallback to storage helper if Cloud Function is unprovisioned in dev/static mode
       if (!downloadUrl && producerId) {
         downloadUrl = await getBeatDownloadUrl(producerId, beatId, format);
       }
@@ -188,28 +248,27 @@ export default function DashboardPage() {
           ))}
       </div>
 
-      {/* Tab Content */}
+      {/* Overview Tab */}
       {activeTab === "overview" && (
         <div className="animate-fadeIn">
-          {/* Stats Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {[
               {
-                label: "Total Earnings",
+                label: "Total Sales Revenue",
                 value: `$${(stats.totalSales * 39.99).toFixed(2)}`,
                 icon: <DollarSign size={18} />,
                 color: "var(--accent-green)",
                 bg: "rgba(16, 185, 129, 0.1)",
               },
               {
-                label: "Total Sales",
+                label: "Total Beats Sold",
                 value: `${stats.totalSales}`,
                 icon: <TrendingUp size={18} />,
                 color: "var(--accent-purple-light)",
                 bg: "rgba(139, 92, 246, 0.1)",
               },
               {
-                label: "Uploaded Beats",
+                label: "Catalog Beats",
                 value: `${stats.totalBeats}`,
                 icon: <Music size={18} />,
                 color: "var(--accent-cyan)",
@@ -249,7 +308,6 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          {/* Quick Actions */}
           <div>
             <h2 className="text-lg font-semibold mb-4" style={{ fontFamily: "var(--font-heading)" }}>
               Quick Actions
@@ -258,7 +316,7 @@ export default function DashboardPage() {
               {[
                 { label: "Upload New Beat", icon: <Upload size={18} />, href: "/dashboard/upload", color: "var(--accent-purple-light)" },
                 { label: "View Wishlist", icon: <Heart size={18} />, href: "/wishlist", color: "var(--accent-pink)" },
-                { label: "Browse Beats", icon: <Music size={18} />, href: "/beats", color: "var(--accent-cyan)" },
+                { label: "Browse Marketplace", icon: <Music size={18} />, href: "/beats", color: "var(--accent-cyan)" },
               ].map((action) => (
                 <Link
                   key={action.label}
@@ -283,35 +341,132 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* My Beats Tab (Producer Catalog Management) */}
       {activeTab === "beats" && (
         <div className="animate-fadeIn">
           {loadingData ? (
             <div className="text-center py-16">
               <Loader2 size={32} className="animate-spin mx-auto mb-3 text-purple-400" />
-              <p className="text-xs text-muted-foreground">Loading your beats from Firestore...</p>
+              <p className="text-xs text-muted-foreground">Loading catalog from Firestore...</p>
             </div>
           ) : myBeats.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {myBeats.map((beat) => (
-                <div key={beat.id} className="relative group">
-                  <BeatCard beat={beat} />
-                  <div className="mt-2 flex items-center justify-between px-1">
-                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${beat.isActive ? "bg-emerald-500/20 text-emerald-400" : "bg-zinc-800 text-zinc-400"}`}>
-                      {beat.isActive ? "Active" : "Draft"}
-                    </span>
-                    <span className="text-xs font-semibold text-zinc-300">
-                      ${beat.prices?.wav ? beat.prices.wav.toFixed(2) : "0.00"}
-                    </span>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between px-1">
+                <p className="text-xs font-medium text-zinc-400">
+                  Managing {myBeats.length} {myBeats.length === 1 ? "beat" : "beats"} in your catalog
+                </p>
+                <Link href="/dashboard/upload" className="btn-primary text-xs py-1.5 px-3">
+                  <Plus size={14} /> Add Beat
+                </Link>
+              </div>
+
+              <div className="space-y-3">
+                {myBeats.map((beat) => (
+                  <div
+                    key={beat.id}
+                    className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:border-zinc-700"
+                  >
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div
+                        className="w-14 h-14 rounded-xl shrink-0"
+                        style={{
+                          background: beat.coverArtUrl
+                            ? `url(${beat.coverArtUrl}) center/cover`
+                            : "var(--gradient-cool)",
+                        }}
+                      />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-sm font-bold text-white truncate">{beat.title}</h3>
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              beat.isActive
+                                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                : "bg-zinc-800 text-zinc-400 border border-zinc-700"
+                            }`}
+                          >
+                            {beat.isActive ? "ACTIVE" : "DRAFT"}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-400">
+                          <span className="font-mono">{beat.bpm} BPM</span>
+                          <span>•</span>
+                          <span className="font-mono">{beat.key}</span>
+                          <span>•</span>
+                          <span className="text-purple-300 font-medium">
+                            {beat.genres?.join(", ") || "Hip Hop"}
+                          </span>
+                          <span>•</span>
+                          <span className="text-emerald-400 font-semibold">
+                            ${beat.prices?.wav?.toFixed(2) || "39.99"} WAV
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-3 mt-1.5 text-[11px] text-zinc-500">
+                          <span>Sales: <strong className="text-white">{beat.salesCount || 0}</strong></span>
+                          <span>Rating: <strong className="text-yellow-400">{beat.avgRating ? beat.avgRating.toFixed(1) : "5.0 ★"}</strong></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Catalog Actions */}
+                    <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                      <Link
+                        href={`/beats/${beat.id}`}
+                        target="_blank"
+                        className="btn-ghost text-xs p-2 text-zinc-400 hover:text-white"
+                        title="View Public Store Page"
+                      >
+                        <ExternalLink size={15} />
+                      </Link>
+
+                      <button
+                        onClick={() => handleToggleBeatActive(beat)}
+                        disabled={togglingBeatId === beat.id}
+                        className="btn-ghost text-xs p-2 text-zinc-400 hover:text-white"
+                        title={beat.isActive ? "Set to Draft" : "Set to Active"}
+                      >
+                        {togglingBeatId === beat.id ? (
+                          <Loader2 size={15} className="animate-spin" />
+                        ) : beat.isActive ? (
+                          <EyeOff size={15} className="text-amber-400" />
+                        ) : (
+                          <Eye size={15} className="text-emerald-400" />
+                        )}
+                      </button>
+
+                      <button
+                        onClick={() => setEditingBeat(beat)}
+                        className="btn-ghost text-xs p-2 text-purple-400 hover:text-purple-300 border border-purple-500/20 rounded-lg"
+                        title="Edit Metadata & Pricing"
+                      >
+                        <Edit size={15} />
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteBeat(beat)}
+                        disabled={deletingBeatId === beat.id}
+                        className="btn-ghost text-xs p-2 text-red-400 hover:text-red-300 border border-red-500/20 rounded-lg"
+                        title="Delete Beat"
+                      >
+                        {deletingBeatId === beat.id ? (
+                          <Loader2 size={15} className="animate-spin" />
+                        ) : (
+                          <Trash2 size={15} />
+                        )}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           ) : (
             <div className="text-center py-16">
               <Music size={40} className="mx-auto mb-4" style={{ color: "var(--text-muted)" }} />
-              <h3 className="text-lg font-semibold mb-2">No beats uploaded yet</h3>
+              <h3 className="text-lg font-semibold mb-2">No beats in catalog</h3>
               <p className="text-sm mb-6" style={{ color: "var(--text-muted)" }}>
-                Start building your catalog by uploading your first beat.
+                Start building your producer catalog by uploading your first beat.
               </p>
               <Link href="/dashboard/upload" className="btn-primary">
                 <Upload size={16} /> Upload Your First Beat
@@ -321,16 +476,76 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Sales Tab */}
       {activeTab === "sales" && (
-        <div className="animate-fadeIn text-center py-16">
-          <DollarSign size={40} className="mx-auto mb-4" style={{ color: "var(--text-muted)" }} />
-          <h3 className="text-lg font-semibold mb-2">No sales yet</h3>
-          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-            Your sales and revenue data will appear here once buyers purchase your beats.
-          </p>
+        <div className="animate-fadeIn">
+          {loadingData ? (
+            <div className="text-center py-16">
+              <Loader2 size={32} className="animate-spin mx-auto mb-3 text-purple-400" />
+              <p className="text-xs text-muted-foreground">Loading sales data...</p>
+            </div>
+          ) : sales.length > 0 ? (
+            <div className="space-y-4">
+              <div className="p-5 rounded-xl border border-zinc-800 bg-zinc-900/60 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-zinc-400">Total Store Revenue</p>
+                  <p className="text-2xl font-extrabold text-emerald-400 font-mono">
+                    ${sales.reduce((sum, s) => sum + (s.totalAmount || 0), 0).toFixed(2)} USD
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-zinc-400">Completed Transactions</p>
+                  <p className="text-lg font-bold text-white">{sales.length}</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {sales.map((order) => (
+                  <div
+                    key={order.id}
+                    className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/40 space-y-2"
+                  >
+                    <div className="flex items-center justify-between text-xs text-zinc-400 border-b border-zinc-800/60 pb-2">
+                      <span className="font-mono">Order #{order.id.slice(0, 10)}</span>
+                      <span>
+                        {order.createdAt
+                          ? new Date(
+                              typeof order.createdAt === "object" && "seconds" in order.createdAt
+                                ? (order.createdAt as { seconds: number }).seconds * 1000
+                                : (order.createdAt as unknown as string)
+                            ).toLocaleDateString()
+                          : "Recent"}
+                      </span>
+                    </div>
+                    {order.items?.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between text-sm py-1">
+                        <div className="flex items-center gap-2">
+                          <Music size={14} className="text-purple-400" />
+                          <span className="font-bold text-white">{item.beatTitle}</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 uppercase font-mono">
+                            {item.format}
+                          </span>
+                        </div>
+                        <span className="font-bold text-emerald-400">${item.price?.toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <DollarSign size={40} className="mx-auto mb-4" style={{ color: "var(--text-muted)" }} />
+              <h3 className="text-lg font-semibold mb-2">No sales recorded yet</h3>
+              <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                Sales and revenue metrics will appear here once buyers complete purchases of your beats.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
+      {/* Purchases Tab */}
       {activeTab === "purchases" && (
         <div className="animate-fadeIn">
           {loadingData ? (
@@ -446,6 +661,18 @@ export default function DashboardPage() {
           </p>
         </div>
       )}
+
+      {/* Edit Beat Modal */}
+      <EditBeatModal
+        isOpen={!!editingBeat}
+        beat={editingBeat}
+        onClose={() => setEditingBeat(null)}
+        onSaveSuccess={(updatedBeat) => {
+          setMyBeats((prev) =>
+            prev.map((b) => (b.id === updatedBeat.id ? updatedBeat : b))
+          );
+        }}
+      />
 
       {/* License Contract Modal */}
       <LicenseModal
