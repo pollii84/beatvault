@@ -15,7 +15,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "./firebase";
-import { Beat, BeatFormat, Order, OrderItem, Review } from "./types";
+import { Beat, BeatFormat, BeatPack, Order, OrderItem, Review } from "./types";
 
 // ===== Beat CRUD =====
 
@@ -179,4 +179,42 @@ export async function getProducerSales(producerId: string): Promise<Order[]> {
     .filter((order) =>
       order.items?.some((item) => beatIds.includes(item.beatId))
     );
+}
+
+// ===== Beat Pack CRUD =====
+
+export async function createBeatPack(
+  packData: Omit<BeatPack, "id" | "createdAt">
+): Promise<string> {
+  const docRef = await addDoc(collection(db, "packs"), {
+    ...packData,
+    createdAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function getBeatPacks(limitCount = 20): Promise<BeatPack[]> {
+  try {
+    const q = query(
+      collection(db, "packs"),
+      orderBy("createdAt", "desc"),
+      limit(limitCount)
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as BeatPack));
+  } catch (err) {
+    console.warn("Error fetching beat packs from Firestore:", err);
+    return [];
+  }
+}
+
+export async function getBeatPack(packId: string): Promise<BeatPack | null> {
+  try {
+    const packRef = doc(db, "packs", packId);
+    const snap = await getDoc(packRef);
+    if (!snap.exists()) return null;
+    return { id: snap.id, ...snap.data() } as BeatPack;
+  } catch {
+    return null;
+  }
 }
