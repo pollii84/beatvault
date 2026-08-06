@@ -15,7 +15,6 @@ import {
 } from "@/lib/storage";
 import { createBeat } from "@/lib/firestore";
 import {
-  Upload,
   Music,
   FileAudio,
   Image as ImageIcon,
@@ -57,7 +56,6 @@ export default function UploadPage() {
 
   // Step 1 — Audio files
   const [audioFiles, setAudioFiles] = useState<Map<string, FileUploadItem>>(new Map());
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Step 2 — Metadata
   const [title, setTitle] = useState("");
@@ -81,21 +79,8 @@ export default function UploadPage() {
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
-  // ===== Guard: must be producer =====
+  // Producer role check
   const isProducer = profile?.role === "producer" || profile?.role === "both";
-  if (!isProducer) {
-    return (
-      <div className="max-w-2xl mx-auto px-6 py-20 text-center">
-        <Music size={48} className="mx-auto mb-4" style={{ color: "var(--text-muted)" }} />
-        <h1 className="text-2xl font-bold mb-2" style={{ fontFamily: "var(--font-heading)" }}>
-          Producer Account Required
-        </h1>
-        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-          You need a producer account to upload beats. Update your profile role to get started.
-        </p>
-      </div>
-    );
-  }
 
   // ===== Audio File Handlers =====
   const handleAddFile = (format: string, file: File) => {
@@ -234,6 +219,20 @@ export default function UploadPage() {
         return false;
     }
   };
+
+  if (!isProducer) {
+    return (
+      <div className="max-w-2xl mx-auto px-6 py-20 text-center">
+        <Music size={48} className="mx-auto mb-4" style={{ color: "var(--text-muted)" }} />
+        <h1 className="text-2xl font-bold mb-2" style={{ fontFamily: "var(--font-heading)" }}>
+          Producer Account Required
+        </h1>
+        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+          You need a producer account to upload beats. Update your profile role to get started.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">

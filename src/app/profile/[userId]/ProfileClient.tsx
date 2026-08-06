@@ -2,13 +2,9 @@
 
 import React from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import { User, ArrowLeft } from "lucide-react";
 
 export default function ProfileClient() {
-  const params = useParams();
-  const userId = params.userId as string;
-
   return (
     <div className="max-w-4xl mx-auto px-6 py-20 text-center">
       <User size={56} className="mx-auto mb-5" style={{ color: "var(--text-muted)" }} />

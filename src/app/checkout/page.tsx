@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
 import { ShieldCheck, CreditCard, Lock, ArrowLeft, Check, Loader2, AlertCircle } from "lucide-react";

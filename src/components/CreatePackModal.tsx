@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Beat, BeatPack } from "@/lib/types";
 import { createBeatPack } from "@/lib/firestore";
-import { X, Plus, Package, Save, Loader2 } from "lucide-react";
+import { X, Package, Save, Loader2 } from "lucide-react";
 
 interface CreatePackModalProps {
   isOpen: boolean;

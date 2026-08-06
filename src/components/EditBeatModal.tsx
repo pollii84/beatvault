@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Beat, GENRES, MUSICAL_KEYS, BeatFormat } from "@/lib/types";
 import { updateBeat } from "@/lib/firestore";
 import { X, Save, Loader2, Music, DollarSign, Tag } from "lucide-react";
@@ -34,24 +34,25 @@ export default function EditBeatModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (beat) {
-      setTitle(beat.title || "");
-      setDescription(beat.description || "");
-      setBpm(beat.bpm || 120);
-      setKey(beat.key || "Cm");
-      setGenres(beat.genres || ["Hip Hop"]);
-      setTagsInput(beat.tags?.join(", ") || "");
-      setIsActive(beat.isActive !== false);
-      setPrices({
-        mp3: beat.prices?.mp3 || 19.99,
-        wav: beat.prices?.wav || 39.99,
-        flac: beat.prices?.flac || 49.99,
-        stems: beat.prices?.stems || 99.99,
-      });
-      setError(null);
-    }
-  }, [beat]);
+  const [prevBeatId, setPrevBeatId] = useState<string | null>(null);
+
+  if (beat && beat.id !== prevBeatId) {
+    setPrevBeatId(beat.id);
+    setTitle(beat.title || "");
+    setDescription(beat.description || "");
+    setBpm(beat.bpm || 120);
+    setKey(beat.key || "Cm");
+    setGenres(beat.genres || ["Hip Hop"]);
+    setTagsInput(beat.tags?.join(", ") || "");
+    setIsActive(beat.isActive !== false);
+    setPrices({
+      mp3: beat.prices?.mp3 || 19.99,
+      wav: beat.prices?.wav || 39.99,
+      flac: beat.prices?.flac || 49.99,
+      stems: beat.prices?.stems || 99.99,
+    });
+    setError(null);
+  }
 
   if (!isOpen || !beat) return null;
 

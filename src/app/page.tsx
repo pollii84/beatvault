@@ -13,7 +13,6 @@ import {
   Shield,
   Download,
   Star,
-  Music,
   Package,
   Sparkles,
 } from "lucide-react";

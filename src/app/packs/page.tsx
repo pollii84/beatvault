@@ -4,14 +4,12 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { getBeatPacks, getProducerBeats } from "@/lib/firestore";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCart } from "@/contexts/CartContext";
 import { BeatPack, Beat } from "@/lib/types";
 import CreatePackModal from "@/components/CreatePackModal";
 import {
   Package,
   Sparkles,
   ArrowRight,
-  ShoppingCart,
   Plus,
   Loader2,
   Zap,
@@ -20,7 +18,6 @@ import {
 
 export default function PacksPage() {
   const { user, profile } = useAuth();
-  const { addItem } = useCart();
   const [packs, setPacks] = useState<BeatPack[]>([]);
   const [loading, setLoading] = useState(true);
   const [producerBeats, setProducerBeats] = useState<Beat[]>([]);

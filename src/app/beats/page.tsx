@@ -9,14 +9,12 @@ import {
   Search,
   SlidersHorizontal,
   X,
-  ChevronDown,
   Grid3X3,
   List,
 } from "lucide-react";
 
 export default function BeatsPage() {
   const [dbBeats, setDbBeats] = useState<Beat[]>([]);
-  const [loadingDb, setLoadingDb] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
@@ -34,8 +32,6 @@ export default function BeatsPage() {
         setDbBeats(fetched);
       } catch (err) {
         console.error("Failed to load beats from Firestore:", err);
-      } finally {
-        setLoadingDb(false);
       }
     }
     loadDbBeats();
@@ -146,7 +142,7 @@ export default function BeatsPage() {
     }
 
     return beats;
-  }, [searchQuery, selectedGenres, selectedFormats, selectedKey, bpmRange, priceRange, sortBy]);
+  }, [allBeats, searchQuery, selectedGenres, selectedFormats, selectedKey, bpmRange, priceRange, sortBy]);
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">

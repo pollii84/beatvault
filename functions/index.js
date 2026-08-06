@@ -256,6 +256,11 @@ async function fulfillOrder(session) {
     });
   }
 
+  // Commit the batch
+  await batch.commit();
+  console.log(`Created order ${orderRef.id} with ${orderItems.length} items`);
+}
+
 
 // ============================================================
 // 3. getSecureDownloadUrl — callable function for secure downloads

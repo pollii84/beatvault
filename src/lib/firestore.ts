@@ -2,7 +2,6 @@ import {
   collection,
   doc,
   addDoc,
-  setDoc,
   updateDoc,
   deleteDoc,
   getDoc,
@@ -11,11 +10,10 @@ import {
   where,
   orderBy,
   limit,
-  Timestamp,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "./firebase";
-import { Beat, BeatFormat, BeatPack, Order, OrderItem, Review } from "./types";
+import { Beat, BeatPack, Order, Review } from "./types";
 
 // ===== Beat CRUD =====
 

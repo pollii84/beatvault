@@ -1,18 +1,17 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { Check, Download, Music, Loader2 } from "lucide-react";
+import { Check, Download, Music } from "lucide-react";
 
 export default function CheckoutSuccessPage() {
-  const [sessionId, setSessionId] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Extract session_id from URL params
-    const params = new URLSearchParams(window.location.search);
-    const sid = params.get("session_id");
-    if (sid) setSessionId(sid);
-  }, []);
+  const [sessionId] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("session_id");
+    }
+    return null;
+  });
 
   return (
     <div className="max-w-lg mx-auto px-6 py-20 text-center animate-fadeIn">

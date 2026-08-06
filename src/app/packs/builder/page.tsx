@@ -5,7 +5,7 @@ import Link from "next/link";
 import { getActiveBeats } from "@/lib/firestore";
 import { useCart } from "@/contexts/CartContext";
 import { usePlayer } from "@/contexts/PlayerContext";
-import { Beat, GENRES } from "@/lib/types";
+import { Beat } from "@/lib/types";
 import {
   Package,
   Plus,

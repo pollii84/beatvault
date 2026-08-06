@@ -8,7 +8,6 @@ import { getBeat } from "@/lib/firestore";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useCart } from "@/contexts/CartContext";
 import { Beat, BeatFormat, FORMATS } from "@/lib/types";
-import BeatCard from "@/components/BeatCard";
 import {
   Play,
   Pause,
@@ -29,7 +28,6 @@ export default function BeatDetailClient() {
   const [beat, setBeat] = useState<Beat | null>(() => {
     return MOCK_BEATS.find((b) => b.id === beatId) || null;
   });
-  const [loading, setLoading] = useState(!beat);
 
   useEffect(() => {
     async function loadBeat() {
@@ -40,8 +38,6 @@ export default function BeatDetailClient() {
         }
       } catch (err) {
         console.error("Failed to load beat from Firestore:", err);
-      } finally {
-        setLoading(false);
       }
     }
     loadBeat();
@@ -53,9 +49,6 @@ export default function BeatDetailClient() {
   const [selectedFormat, setSelectedFormat] = useState<BeatFormat>("wav");
 
   const isCurrentlyPlaying = currentBeat?.id === activeBeat.id && isPlaying;
-  const relatedBeats = MOCK_BEATS.filter(
-    (b) => b.id !== activeBeat.id && b.genres.some((g) => activeBeat.genres.includes(g))
-  ).slice(0, 4);
 
   const formatDuration = (s: number) => {
     const m = Math.floor(s / 60);

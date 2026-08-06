@@ -1,4 +1,4 @@
-import { Beat, BeatPack } from "@/lib/types";
+import { Beat } from "@/lib/types";
 
 // Generate pseudo-random waveform data seeded by string
 function generateWaveform(seed: string, length = 80): number[] {
