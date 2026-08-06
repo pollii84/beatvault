@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { getProducerBeats, getProducerStats, getUserPurchases } from "@/lib/firestore";
 import { getBeatDownloadUrl } from "@/lib/storage";
-import { Beat, Order } from "@/lib/types";
+import { Beat, Order, OrderItem } from "@/lib/types";
 import BeatCard from "@/components/BeatCard";
+import LicenseModal from "@/components/LicenseModal";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import {
   LayoutDashboard,
   Upload,
@@ -20,8 +22,9 @@ import {
   TrendingUp,
   Music,
   ArrowRight,
-  ExternalLink,
   Loader2,
+  FileText,
+  ShieldCheck,
 } from "lucide-react";
 
 type DashTab = "overview" | "beats" | "sales" | "purchases" | "analytics";
@@ -36,6 +39,17 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({ totalBeats: 0, activeBeats: 0, totalSales: 0, avgRating: 0 });
   const [loadingData, setLoadingData] = useState(true);
   const [downloadingFormat, setDownloadingFormat] = useState<string | null>(null);
+
+  // License Modal State
+  const [licenseModal, setLicenseModal] = useState<{
+    isOpen: boolean;
+    item: OrderItem | null;
+    order: Order | null;
+  }>({
+    isOpen: false,
+    item: null,
+    order: null,
+  });
 
   const isProducer = profile?.role === "producer" || profile?.role === "both";
   const isBuyer = profile?.role === "buyer" || profile?.role === "both";
@@ -64,18 +78,56 @@ export default function DashboardPage() {
     loadDashboardData();
   }, [user, isProducer, isBuyer]);
 
-  const handleDownloadFile = async (producerId: string, beatId: string, format: string) => {
-    const key = `${beatId}-${format}`;
+  const handleDownloadFile = async (orderId: string, beatId: string, format: string, producerId?: string) => {
+    const key = `${orderId}-${beatId}-${format}`;
     setDownloadingFormat(key);
+
     try {
-      const url = await getBeatDownloadUrl(producerId, beatId, format);
-      if (url) {
-        window.open(url, "_blank");
-      } else {
-        alert(`Download link for ${format.toUpperCase()} is processing or unavailable.`);
+      let downloadUrl: string | null = null;
+
+      // Try secure Cloud Function signed URL first
+      try {
+        const functions = getFunctions();
+        const getSecureUrlCall = httpsCallable(functions, "getSecureDownloadUrl");
+        const result = await getSecureUrlCall({ orderId, beatId, format });
+        const data = result.data as { url?: string; downloadCount?: number };
+
+        if (data?.url) {
+          downloadUrl = data.url;
+
+          // Optimistically update local download count
+          setPurchases((prev) =>
+            prev.map((o) =>
+              o.id === orderId
+                ? {
+                    ...o,
+                    items: o.items.map((it) =>
+                      it.beatId === beatId && it.format === format
+                        ? { ...it, downloadCount: (it.downloadCount || 0) + 1 }
+                        : it
+                    ),
+                  }
+                : o
+            )
+          );
+        }
+      } catch (cfErr) {
+        console.warn("Secure Cloud Function download fallback:", cfErr);
       }
-    } catch {
-      alert("Failed to retrieve download link.");
+
+      // Fallback to storage helper if Cloud Function is unprovisioned in dev/static mode
+      if (!downloadUrl && producerId) {
+        downloadUrl = await getBeatDownloadUrl(producerId, beatId, format);
+      }
+
+      if (downloadUrl) {
+        window.open(downloadUrl, "_blank");
+      } else {
+        alert(`Secure download link for ${format.toUpperCase()} is processing or unavailable.`);
+      }
+    } catch (err) {
+      console.error("Download error:", err);
+      alert("Failed to retrieve secure download link.");
     } finally {
       setDownloadingFormat(null);
     }
@@ -291,40 +343,81 @@ export default function DashboardPage() {
               {purchases.map((order) => (
                 <div
                   key={order.id}
-                  className="p-5 rounded-xl border border-zinc-800 bg-zinc-900/60 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  className="p-5 rounded-xl border border-zinc-800 bg-zinc-900/60 space-y-4"
                 >
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">PAID</span>
+                  <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck size={16} className="text-emerald-400" />
+                      <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">ORDER CONFIRMED</span>
                       <span className="text-xs text-zinc-500">• Order #{order.id.slice(0, 8)}</span>
                     </div>
-                    <div className="space-y-1">
-                      {order.items?.map((item) => (
-                        <div key={item.id} className="flex items-center gap-3">
-                          <Music size={14} className="text-purple-400 shrink-0" />
-                          <span className="text-sm font-semibold text-zinc-200">{item.beatTitle}</span>
-                          <span className="text-xs px-2 py-0.5 rounded bg-zinc-800 text-zinc-400 font-mono">
-                            {item.format.toUpperCase()}
-                          </span>
-                          <button
-                            onClick={() => handleDownloadFile(item.id, item.beatId, item.format)}
-                            disabled={downloadingFormat === `${item.beatId}-${item.format}`}
-                            className="btn-ghost text-xs px-2 py-1 gap-1 text-cyan-400 hover:text-cyan-300 ml-auto"
-                          >
-                            {downloadingFormat === `${item.beatId}-${item.format}` ? (
-                              <Loader2 size={12} className="animate-spin" />
-                            ) : (
-                              <Download size={12} />
-                            )}
-                            Download
-                          </button>
-                        </div>
-                      ))}
+                    <div className="text-right">
+                      <span className="text-xs text-zinc-400 mr-2">Paid:</span>
+                      <span className="text-sm font-bold text-white">${order.totalAmount?.toFixed(2)}</span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-zinc-400">Total Paid</p>
-                    <p className="text-lg font-bold text-white">${order.totalAmount?.toFixed(2)}</p>
+
+                  <div className="space-y-3">
+                    {order.items?.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-lg bg-zinc-950/40 border border-zinc-800/50 gap-3"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-10 h-10 rounded-lg shrink-0"
+                            style={{
+                              background: item.beatCoverUrl
+                                ? `url(${item.beatCoverUrl}) center/cover`
+                                : "var(--gradient-cool)",
+                            }}
+                          />
+                          <div>
+                            <p className="text-sm font-bold text-white">{item.beatTitle}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 uppercase tracking-wider font-mono">
+                                {item.format.toUpperCase()}
+                              </span>
+                              <span className="text-[11px] text-zinc-400">
+                                License: Standard Commercial
+                              </span>
+                              {item.downloadCount !== undefined && item.downloadCount > 0 && (
+                                <span className="text-[10px] text-emerald-400 font-medium">
+                                  • Downloaded {item.downloadCount} {item.downloadCount === 1 ? "time" : "times"}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 self-end sm:self-center">
+                          <button
+                            onClick={() =>
+                              setLicenseModal({
+                                isOpen: true,
+                                item,
+                                order,
+                              })
+                            }
+                            className="btn-ghost text-xs px-3 py-1.5 gap-1.5 text-purple-300 hover:text-purple-200 border border-purple-500/30 rounded-lg"
+                          >
+                            <FileText size={13} /> License
+                          </button>
+                          <button
+                            onClick={() => handleDownloadFile(order.id, item.beatId, item.format)}
+                            disabled={downloadingFormat === `${order.id}-${item.beatId}-${item.format}`}
+                            className="btn-primary text-xs px-3.5 py-1.5 gap-1.5"
+                          >
+                            {downloadingFormat === `${order.id}-${item.beatId}-${item.format}` ? (
+                              <Loader2 size={13} className="animate-spin" />
+                            ) : (
+                              <Download size={13} />
+                            )}
+                            Secure Download
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}
@@ -353,6 +446,16 @@ export default function DashboardPage() {
           </p>
         </div>
       )}
+
+      {/* License Contract Modal */}
+      <LicenseModal
+        isOpen={licenseModal.isOpen}
+        onClose={() => setLicenseModal({ isOpen: false, item: null, order: null })}
+        item={licenseModal.item}
+        order={licenseModal.order}
+        buyerName={profile?.displayName || user?.email || "Buyer"}
+        buyerEmail={user?.email || "buyer@beatvault.com"}
+      />
     </div>
   );
 }

@@ -256,7 +256,130 @@ async function fulfillOrder(session) {
     });
   }
 
-  // Commit the batch
-  await batch.commit();
-  console.log(`Created order ${orderRef.id} with ${orderItems.length} items`);
-}
+
+// ============================================================
+// 3. getSecureDownloadUrl — callable function for secure downloads
+// ============================================================
+exports.getSecureDownloadUrl = onCall(
+  {
+    enforceAppCheck: false,
+  },
+  async (request) => {
+    // 1. Require authentication
+    if (!request.auth) {
+      throw new HttpsError(
+        "unauthenticated",
+        "You must be signed in to download files."
+      );
+    }
+
+    const { orderId, beatId, format } = request.data;
+    const userId = request.auth.uid;
+
+    if (!orderId || !beatId) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Missing required fields: orderId and beatId."
+      );
+    }
+
+    // 2. Fetch order and verify ownership
+    const orderRef = db.collection("orders").doc(orderId);
+    const orderSnap = await orderRef.get();
+
+    if (!orderSnap.exists) {
+      throw new HttpsError("not-found", "Order not found.");
+    }
+
+    const order = orderSnap.data();
+
+    if (order.buyerId !== userId) {
+      throw new HttpsError(
+        "permission-denied",
+        "You do not own this purchase."
+      );
+    }
+
+    if (order.status !== "paid") {
+      throw new HttpsError(
+        "failed-precondition",
+        "Order payment has not been completed."
+      );
+    }
+
+    // 3. Find matching item in order
+    const items = order.items || [];
+    const itemIndex = items.findIndex(
+      (item) => item.beatId === beatId && (!format || item.format === format)
+    );
+
+    if (itemIndex === -1) {
+      throw new HttpsError(
+        "not-found",
+        "The requested beat is not part of this order."
+      );
+    }
+
+    const targetItem = items[itemIndex];
+    const targetFormat = format || targetItem.format || "mp3";
+
+    // 4. Fetch beat doc to locate storage path
+    const beatSnap = await db.collection("beats").doc(beatId).get();
+    if (!beatSnap.exists) {
+      throw new HttpsError("not-found", "Beat details not found.");
+    }
+
+    const beat = beatSnap.data();
+    const producerId = beat.producerId;
+
+    // 5. Generate signed URL from Firebase Storage via Admin SDK
+    const bucket = admin.storage().bucket();
+    const folderPath = `beats/${producerId}/${beatId}`;
+
+    let signedUrl = "";
+    const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
+
+    try {
+      const [files] = await bucket.getFiles({ prefix: folderPath });
+      const matchingFile = files.find((f) =>
+        f.name.toLowerCase().includes(`/${targetFormat}.`)
+      );
+
+      if (matchingFile) {
+        const [url] = await matchingFile.getSignedUrl({
+          action: "read",
+          expires: expiresAt,
+        });
+        signedUrl = url;
+      } else if (beat.previewUrl && targetFormat === "mp3") {
+        // Fallback to previewUrl if custom mp3 preview exists
+        signedUrl = beat.previewUrl;
+      } else {
+        throw new HttpsError(
+          "not-found",
+          `Master audio file for format "${targetFormat}" is currently unavailable.`
+        );
+      }
+    } catch (err) {
+      if (err instanceof HttpsError) throw err;
+      console.error("Error generating signed URL:", err);
+      throw new HttpsError(
+        "internal",
+        "Failed to generate secure download URL."
+      );
+    }
+
+    // 6. Atomically update downloadCount in order item
+    items[itemIndex].downloadCount = (items[itemIndex].downloadCount || 0) + 1;
+    await orderRef.update({ items });
+
+    return {
+      url: signedUrl,
+      format: targetFormat,
+      beatTitle: beat.title,
+      expiresAt,
+      downloadCount: items[itemIndex].downloadCount,
+    };
+  }
+);
+

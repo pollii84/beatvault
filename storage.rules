@@ -1,15 +1,22 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Beat audio files — producers can write to their own folder, auth users can read
+    // Master beat audio files & stems — only original producer can read directly.
+    // Buyers obtain secure signed URLs via the Cloud Function getSecureDownloadUrl.
     match /beats/{producerId}/{beatId}/{allPaths=**} {
       allow write: if request.auth != null
                    && request.auth.uid == producerId
                    && request.resource.size < 500 * 1024 * 1024;
-      allow read: if request.auth != null;
+      allow read: if request.auth != null && request.auth.uid == producerId;
     }
 
-    // Cover art — publicly readable, auth users can write
+    // Watermarked previews & audio clips — publicly readable
+    match /previews/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Cover art — publicly readable, producers can write their own beat covers
     match /covers/{producerId}/{beatId}/{allPaths=**} {
       allow read: if true;
       allow write: if request.auth != null
