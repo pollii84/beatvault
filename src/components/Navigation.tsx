@@ -18,6 +18,8 @@ import {
   Package,
   LayoutDashboard,
   ChevronDown,
+  BookOpen,
+  Sparkles,
 } from "lucide-react";
 
 export default function Navigation() {
@@ -76,6 +78,14 @@ export default function Navigation() {
           <Link href="/packs" className="btn-ghost text-sm" id="nav-packs">
             <Package size={16} />
             Packs
+          </Link>
+          <Link href="/packs/builder" className="btn-ghost text-sm text-cyan-400 hover:text-cyan-300" id="nav-builder">
+            <Sparkles size={16} />
+            Pack Builder
+          </Link>
+          <Link href="/learn" className="btn-ghost text-sm text-purple-400 hover:text-purple-300" id="nav-learn">
+            <BookOpen size={16} />
+            Learn
           </Link>
         </div>
 
@@ -251,6 +261,22 @@ export default function Navigation() {
           >
             <Package size={18} />
             Beat Packs
+          </Link>
+          <Link
+            href="/packs/builder"
+            className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors hover:bg-white/5 text-cyan-400"
+            onClick={() => setShowMobileMenu(false)}
+          >
+            <Sparkles size={18} />
+            Pack Builder
+          </Link>
+          <Link
+            href="/learn"
+            className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors hover:bg-white/5 text-purple-400"
+            onClick={() => setShowMobileMenu(false)}
+          >
+            <BookOpen size={18} />
+            Masterclass / Learn
           </Link>
         </div>
       )}

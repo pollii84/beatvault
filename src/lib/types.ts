@@ -46,6 +46,8 @@ export interface Beat {
   createdAt: Date;
   isActive: boolean;
   isFree?: boolean;
+  energyArc?: "slow-build" | "anthemic" | "minimal";
+  hasVocalChopStem?: boolean;
 }
 
 // ===== Beat Pack Types =====
@@ -140,6 +142,8 @@ export interface CartItem {
 
 // ===== Genre & Format Constants =====
 export const GENRES = [
+  "Fred Again Type",
+  "UK Garage",
   "Hip Hop",
   "Trap",
   "R&B",
@@ -156,6 +160,16 @@ export const GENRES = [
   "EDM",
   "Dancehall",
   "Ambient",
+] as const;
+
+export const FRED_AGAIN_SUBTAGS = [
+  "chopped-vocal",
+  "garage-house",
+  "emotional-build",
+  "festival-drop",
+  "two-step",
+  "drone-intro",
+  "rolling-bass",
 ] as const;
 
 export const FORMATS: { value: BeatFormat; label: string; description: string }[] = [
