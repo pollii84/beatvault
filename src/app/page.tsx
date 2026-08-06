@@ -15,6 +15,8 @@ import {
   Star,
   Package,
   Sparkles,
+  Wand2,
+  BookOpen,
 } from "lucide-react";
 
 export default function HomePage() {
@@ -98,9 +100,13 @@ export default function HomePage() {
                 <Headphones size={18} />
                 Browse Beats
               </Link>
-              <Link href="/signup" className="btn-secondary text-base px-8 py-3" id="hero-sell-cta">
-                Start Selling
-                <ArrowRight size={16} />
+              <Link href="/match" className="btn-secondary text-base px-6 py-3 border-amber-500/40 text-amber-300 hover:text-amber-200" id="hero-match-cta">
+                <Wand2 size={18} />
+                Match My Track (AI)
+              </Link>
+              <Link href="/learn" className="btn-secondary text-base px-6 py-3 border-purple-500/40 text-purple-300 hover:text-purple-200" id="hero-learn-cta">
+                <BookOpen size={18} />
+                Masterclass
               </Link>
             </div>
 
@@ -124,6 +130,60 @@ export default function HomePage() {
                   </p>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== Feature Spotlight: AI Matcher & Fred Again Masterclass ===== */}
+      <section className="py-10 px-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Card 1: AI Smart Beat Matcher */}
+          <div
+            className="p-6 md:p-8 rounded-2xl border border-amber-500/30 space-y-4 relative overflow-hidden"
+            style={{
+              background: "linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(15, 23, 42, 0.9))",
+            }}
+          >
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              <Wand2 size={13} /> Feature 8: AI Innovation
+            </div>
+            <h2 className="text-2xl font-extrabold text-white" style={{ fontFamily: "var(--font-heading)" }}>
+              AI Smart Beat Matcher v1
+            </h2>
+            <p className="text-xs text-zinc-300 leading-relaxed">
+              Upload a vocal take or record a 10s voice memo. Our AI detects key, BPM, and mood to rank catalog beats using Camelot Wheel harmonic compatibility.
+            </p>
+            <div className="pt-2">
+              <Link href="/match" className="btn-primary text-xs py-2.5 px-5 gap-2 bg-amber-500 hover:bg-amber-400 text-black font-bold">
+                <Wand2 size={15} /> Try &quot;Match My Track&quot; Now
+              </Link>
+            </div>
+          </div>
+
+          {/* Card 2: Fred Again-Style Beat Line & Masterclass */}
+          <div
+            className="p-6 md:p-8 rounded-2xl border border-purple-500/30 space-y-4 relative overflow-hidden"
+            style={{
+              background: "linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(15, 23, 42, 0.9))",
+            }}
+          >
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/30">
+              <BookOpen size={13} /> Feature 7: Signature Beat Line
+            </div>
+            <h2 className="text-2xl font-extrabold text-white" style={{ fontFamily: "var(--font-heading)" }}>
+              Fred Again-Style Line & Masterclass
+            </h2>
+            <p className="text-xs text-zinc-300 leading-relaxed">
+              Explore UK Garage swing, chopped vocal stems, and the 6-module studio practice workbook for vocal chopping, rolling bass, and emotional pacing.
+            </p>
+            <div className="flex items-center gap-3 pt-2">
+              <Link href="/learn" className="btn-primary text-xs py-2.5 px-5 gap-2">
+                <BookOpen size={15} /> Open Studio Masterclass
+              </Link>
+              <Link href="/beats?genre=Fred+Again+Type" className="btn-secondary text-xs py-2.5 px-4">
+                Fred Again Beats
+              </Link>
             </div>
           </div>
         </div>

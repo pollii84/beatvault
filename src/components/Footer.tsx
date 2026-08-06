@@ -52,14 +52,20 @@ export default function Footer() {
               Marketplace
             </h4>
             <ul className="space-y-2.5">
-              {["Browse Beats", "Beat Packs", "Genres", "New Releases", "Top Charts"].map((item) => (
-                <li key={item}>
+              {[
+                { label: "Browse Beats", href: "/beats" },
+                { label: "Beat Packs & Bundles", href: "/packs" },
+                { label: "Pack Builder", href: "/packs/builder" },
+                { label: "Match My Track (AI)", href: "/match" },
+                { label: "Production Masterclass", href: "/learn" },
+              ].map((item) => (
+                <li key={item.label}>
                   <Link
-                    href="/beats"
+                    href={item.href}
                     className="text-sm transition-colors hover:text-white"
                     style={{ color: "var(--text-muted)" }}
                   >
-                    {item}
+                    {item.label}
                   </Link>
                 </li>
               ))}
